@@ -11,13 +11,14 @@ import Image from "next/image";
 const MyBlogCard: React.FC<BlogCardProps> = ({ blog }) => {
     const router = useRouter();
     const [image] = useState(blog.imageUrl || "");
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleEditClick = () => {
         router.push(`/blog/${blog.id}/edit`);
     };
 
     const handleDeleteClick = () => {
-        router.push(`/blog/${blog.id}/delete`);
+        setShowConfirm(true);
     };
 
     return (
@@ -44,6 +45,22 @@ const MyBlogCard: React.FC<BlogCardProps> = ({ blog }) => {
                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
             </div>
+            {showConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+                        <h2 className="text-lg font-bold mb-2">Delete Blog</h2>
+                        <p className="mb-4">Are you sure you want to delete the blog permanently?</p>
+                        <div className="flex justify-end space-x-2">
+                            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" onClick={() => router.push(`/blog/${blog.id}/delete`)}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

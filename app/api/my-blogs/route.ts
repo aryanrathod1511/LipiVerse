@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
-// GET for author’s blogs: Fetches all blogs authored by the logged-in user.
+// GET for author's blogs: Fetches all blogs authored by the logged-in user.
 export async function GET(req: NextRequest) { 
     try {
         const session = await getServerSession({ req, ...authOptions });
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
                 authorId: authorId,
             },
             orderBy: { createdAt: 'desc' },
+            // The status field is included by default; used for filtering on the frontend
         });
 
         return NextResponse.json(blogs);

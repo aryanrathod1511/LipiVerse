@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import BlogCard from "@/app/components/BlogCard";
 import { Blog } from "@/types/BlogTypes";
 import { Appbar } from "@/app/components/Appbar";
+import { useRouter } from "next/navigation";
+import BackButton from "@/app/components/BackButton";
 
 const prisma = new PrismaClient();
 
@@ -25,6 +27,7 @@ export default async function BlogPage({ params }: { params: { id: string } }) {
       <div className="min-h-screen bg-gray-50">
         <Appbar isBlogPage={true}/>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <BackButton />
         {/* Only pass data, not handlers, to BlogCard */}
         <BlogCard blog={blog as Blog} mode="full" />
       </main>

@@ -2,15 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { getSession, signIn } from "next-auth/react";
-import { Post } from "@prisma/client";
+import { Post as PrismaPost } from "@prisma/client";
 import { Appbar } from "../components/Appbar";
 import MyBlogCard from "../components/MyBlogsCard";
 import MyBlogCardSkeleton from "../components/MyBlogCardSkeleton";
+import { Button } from "../components/ui/button";
+
+type PostWithStatus = PrismaPost & { status: 'PUBLISHED' | 'DRAFT' };
 
 const MyBlogsPage = () => {
-  const [blogs, setBlogs] = useState<Post[]>([]);
+  const [blogs, setBlogs] = useState<PostWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -58,20 +62,42 @@ const MyBlogsPage = () => {
   
   if (error) return <div>{error}</div>;
 
+  // Filter blogs by status
+  const publishedBlogs = blogs.filter((blog) => blog.status === 'PUBLISHED');
+  const draftBlogs = blogs.filter((blog) => blog.status === 'DRAFT');
+
   return (
     <div>
       <Appbar />
       <h2 className="text-2xl text-center my-5 font-bold mb-6">My Blogs</h2>
-      {blogs.length === 0 ? (
-        <p>No blogs found.</p>
+      <div className="flex justify-center mb-6 space-x-4">
+        <Button variant={activeTab === 'PUBLISHED' ? 'default' : 'outline'} onClick={() => setActiveTab('PUBLISHED')}>Published</Button>
+        <Button variant={activeTab === 'DRAFT' ? 'default' : 'outline'} onClick={() => setActiveTab('DRAFT')}>Drafts</Button>
+      </div>
+      {activeTab === 'PUBLISHED' ? (
+        publishedBlogs.length === 0 ? (
+          <p>No published blogs found.</p>
+        ) : (
+          <div className="masonry p-4">
+            {publishedBlogs.map((blog) => (
+              <div key={blog.id} className="masonry-item">
+                <MyBlogCard mode="short" blog={blog} />
+              </div>
+            ))}
+          </div>
+        )
       ) : (
-        <div className="masonry p-4">
-          {blogs.map((blog) => (
-            <div key={blog.id} className="masonry-item">
-              <MyBlogCard mode="short" blog={blog} />
-            </div>
-          ))}
-        </div>
+        draftBlogs.length === 0 ? (
+          <p>No drafts found.</p>
+        ) : (
+          <div className="masonry p-4">
+            {draftBlogs.map((blog) => (
+              <div key={blog.id} className="masonry-item">
+                <MyBlogCard mode="short" blog={blog} />
+              </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

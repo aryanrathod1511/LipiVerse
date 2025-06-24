@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id        Int     @id @default(autoincrement())
   name      String?
@@ -31,6 +36,7 @@ model Post {
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  status    PostStatus @default(DRAFT)
 }
 
 model Upvote {

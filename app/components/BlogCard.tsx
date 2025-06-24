@@ -18,6 +18,9 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
     const [hasBookmarked, setHasBookmarked] = useState(false);
     const { data: session } = useSession();
     const router = useRouter();
+    const [summary, setSummary] = useState<string | null>(null);
+    const [isSummarizing, setIsSummarizing] = useState(false);
+    const [summaryError, setSummaryError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,6 +90,28 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
         }
     };
 
+    const handleSummarize = async () => {
+        setIsSummarizing(true);
+        setSummaryError(null);
+        try {
+            const response = await fetch('/api/summarize-blog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content }),
+            });
+            const data = await response.json();
+            if (data.summary) {
+                setSummary(data.summary);
+            } else {
+                setSummaryError(data.error || 'Failed to summarize.');
+            }
+        } catch (err) {
+            setSummaryError('Failed to summarize.');
+        } finally {
+            setIsSummarizing(false);
+        }
+    };
+
     // Utility function to truncate Markdown content for preview
     const truncateMarkdown = (markdown: string, maxLength: number) => {
         if (markdown.length <= maxLength) return markdown;
@@ -116,6 +141,24 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
                 >
                     {mode === "short" ? truncateMarkdown(content, 50) : content}
                 </ReactMarkdown>
+                {mode === "full" && (
+                    <div className="mt-6">
+                        <Button onClick={handleSummarize} disabled={isSummarizing} variant="secondary">
+                            {isSummarizing ? "Summarizing..." : "Summarize"}
+                        </Button>
+                        {summary && (
+                            <div className="mt-4 p-4 bg-gray-100 rounded">
+                                <h3 className="font-semibold mb-2">Summary</h3>
+                                <p>{summary}</p>
+                            </div>
+                        )}
+                        {summaryError && (
+                            <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
+                                {summaryError}
+                            </div>
+                        )}
+                    </div>
+                )}
             </CardContent>
             <CardFooter className="card-footer flex flex-wrap gap-2 lg:gap-4 justify-center sm:justify-start">
                 <Button 

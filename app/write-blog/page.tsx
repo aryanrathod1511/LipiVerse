@@ -109,6 +109,35 @@ export default function WriteBlogPage() {
         }
     };
 
+    // Handle Save as Draft
+    const handleSaveDraft = async (e: MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        if (!title && !content) {
+            alert("Please enter a title or content to save as draft.");
+            return;
+        }
+        if (isImageUploading || isImageGenerating || isPublishing) return;
+
+        setIsPublishing(true);
+
+        try {
+            const response = await fetch("/api/write-blog", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content, image: imageUrl, status: 'DRAFT' }),
+            });
+            if (response.ok) {
+                await response.json();
+                router.push('/my-blogs');
+            } else alert("Failed to save draft.");
+        } catch (error) {
+            console.error("POST error:", error);
+            alert("An error occurred. Please try again.");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
     useEffect(() => {
         if (status === "loading") return;
         if (status === "unauthenticated") router.push("/auth/signin");
@@ -123,6 +152,7 @@ export default function WriteBlogPage() {
             {session && (
                 <div className="min-h-screen bg-gray-50">
                     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <BackButton />
                         <h1 className="text-3xl font-bold text-gray-900 mb-6">Create New Blog</h1>
                         <form className="bg-white shadow-md rounded-lg p-6 space-y-6">
                             <div className="space-y-2">
@@ -151,6 +181,9 @@ export default function WriteBlogPage() {
                             <div className="flex justify-end space-x-4">
                                 <Button type="button" onClick={handleGenerateImage} disabled={!content || isImageUploading || isImageGenerating}>
                                     Generate Image
+                                </Button>
+                                <Button type="button" onClick={handleSaveDraft} disabled={isLoading} variant="secondary">
+                                    Save as Draft
                                 </Button>
                             </div>
 
@@ -214,5 +247,18 @@ export default function WriteBlogPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+// Add a simple back button component
+function BackButton() {
+    const router = useRouter();
+    return (
+        <button
+            onClick={() => router.back()}
+            className="mb-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 font-medium"
+        >
+            ← Back
+        </button>
     );
 }

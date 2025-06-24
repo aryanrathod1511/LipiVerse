@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
     }
 
-    const { title, content, image } = await req.json();
+    const { title, content, image, status } = await req.json();
 
     if (!title || !content) {
         return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
                 content,
                 authorId: userId,
                 imageUrl, // Include the imageUrl, will be null if not provided
+                status: status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED',
             },
         });
 
