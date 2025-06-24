@@ -13,4 +13,3 @@
 =======
 # LipiVerse
 Lipiverse is a modern blog and content-sharing platform built with Next.js. It offers a clean UI for creating, editing, and managing posts, powered by server-side rendering and API routes. Fully responsive and deployable via Vercel, it's optimized for performance, scalability, and simplicity.
->>>>>>> 9d411ebcf4b489b8ba95897288e96eb38f60c023
