@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  posts     Post[]
+  accounts  Account[]
+  sessions  Session[]
+  upvotes   Upvote[]
+  bookmarks Bookmark[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  imageUrl  String?
+  authorId  Int     
+  upvotes   Upvote[]
+  bookmark  Bookmark[]
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Upvote {
+  id        Int     @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)  
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])  // Ensure a user can only upvote once per post
+}
+
+model Bookmark {
+  id        Int     @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at       Int?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id         Int     @id @default(autoincrement())
+  sessionToken String  @unique
+  userId      Int
+  expires     DateTime
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
