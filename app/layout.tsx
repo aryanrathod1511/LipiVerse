@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Blogg",
-  description: "Learn New Thing from Blogg",
+  title: "LipiVerse",
+  description: "A modern platform to write, share, and explore blogs.",
 };
 
 export default function RootLayout({
