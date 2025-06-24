@@ -6,7 +6,7 @@ import { Appbar } from "./components/Appbar";
 import { Blog } from "@/types/BlogTypes";
 import BlogCard from "./components/BlogCard";
 import { BlogCardSkeleton } from "./components/BlogCardSkeleton";
-import { Mail, Github, Linkedin, Copyright } from "lucide-react";
+import { Mail, Linkedin, Copyright } from "lucide-react";
 import { Button } from "./components/ui/button";
 
 async function fetchAllBlogs() {
