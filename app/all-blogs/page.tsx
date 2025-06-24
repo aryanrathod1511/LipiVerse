@@ -5,11 +5,13 @@ import BlogCard from "../components/BlogCard";
 import { Appbar } from "../components/Appbar";
 import { BlogCardSkeleton } from "../components/BlogCardSkeleton";
 import { Blog } from "@/types/BlogTypes";
+import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AllBlogs() {
-    const { data: blogs, mutate, error, isLoading } = useSWR<Blog[]>('/api/all-blogs', fetcher);
+    const [search, setSearch] = useState("");
+    const { data: blogs, mutate, error, isLoading } = useSWR<Blog[]>(`/api/all-blogs${search ? `?q=${encodeURIComponent(search)}` : ""}`, fetcher);
 
     const handleUpvote = async (blogId: number) => {
         try {
@@ -31,6 +33,15 @@ export default function AllBlogs() {
     return (
         <div>
             <Appbar isBlogPage={true} />
+            <div className="max-w-2xl mx-auto px-4 py-6">
+                <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search blogs by title or tags..."
+                    className="w-full px-4 py-2 border rounded mb-6"
+                />
+            </div>
             {/* Masonry Layout */}
             <div className="masonry p-4">
                 {isLoading || !blogs

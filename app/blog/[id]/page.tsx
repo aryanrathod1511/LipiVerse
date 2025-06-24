@@ -11,9 +11,14 @@ const prisma = new PrismaClient();
 async function getBlog(id: string) {
   const blog = await prisma.post.findUnique({
     where: { id: parseInt(id, 10) },
+    include: { author: true },
   });
-
-  return blog;
+  if (!blog) return null;
+  return {
+    ...blog,
+    authorName: blog.author?.name ? blog.author.name.toLowerCase() : 'unknown',
+    createdAt: blog.createdAt.toISOString(),
+  };
 }
 
 export default async function BlogPage({ params }: { params: { id: string } }) {

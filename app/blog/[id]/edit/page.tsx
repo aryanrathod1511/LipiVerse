@@ -11,6 +11,8 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Appbar } from "@/app/components/Appbar";
+import { Blog } from "@/types/BlogTypes";
+import SuggestionButton from "@/app/components/ui/SuggestionButton";
 
 const EditBlog: React.FC = () => {
     const { id } = useParams();
@@ -22,6 +24,16 @@ const EditBlog: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [tags, setTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState("");
+    const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+    const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+    const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
+    const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
+    const [isTitleSuggesting, setIsTitleSuggesting] = useState(false);
+    const [isTagSuggesting, setIsTagSuggesting] = useState(false);
+    const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+    const [showDraftConfirm, setShowDraftConfirm] = useState(false);
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -34,6 +46,7 @@ const EditBlog: React.FC = () => {
                     setTitle(data.title || "");
                     setContent(data.content || "");
                     setImageUrl(data.imageUrl || "");
+                    setTags(data.tags || []);
                 } else {
                     console.error("Blog not found:", await res.text());
                 }
@@ -43,6 +56,58 @@ const EditBlog: React.FC = () => {
         };
         fetchBlog();
     }, [id]);
+
+    // AI Tag Suggestions
+    // useEffect(() => {
+    //     if ((title.trim().length > 0 || content.trim().length > 0) && (tagInput.trim().length > 0 || tags.length === 0)) {
+    //         const fetchTagSuggestions = async () => {
+    //             try {
+    //                 const res = await fetch("/api/tag-suggestion", {
+    //                     method: "POST",
+    //                     headers: { "Content-Type": "application/json" },
+    //                     body: JSON.stringify({ title, content }),
+    //                 });
+    //                 const data = await res.json();
+    //                 setTagSuggestions(data.suggestions || []);
+    //                 setShowTagSuggestions(true);
+    //             } catch {
+    //                 setTagSuggestions([]);
+    //                 setShowTagSuggestions(false);
+    //             }
+    //         };
+    //         fetchTagSuggestions();
+    //     } else {
+    //         setShowTagSuggestions(false);
+    //     }
+    // }, [title, content, tagInput]);
+
+    // Add tag from input
+    const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+            e.preventDefault();
+            if (!tags.includes(tagInput.trim())) {
+                setTags([...tags, tagInput.trim()]);
+            }
+            setTagInput("");
+        }
+    };
+    // Remove tag
+    const handleRemoveTag = (tag: string) => {
+        setTags(tags.filter((t) => t !== tag));
+    };
+    // Add tag from suggestion
+    const handleAddTagFromSuggestion = (suggestion: string) => {
+        if (!tags.includes(suggestion)) {
+            setTags([...tags, suggestion]);
+        }
+        setShowTagSuggestions(false);
+        setTagInput("");
+    };
+    // Add title from suggestion
+    const handleAddTitleFromSuggestion = (suggestion: string) => {
+        setTitle(suggestion);
+        setShowTitleSuggestions(false);
+    };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -72,6 +137,45 @@ const EditBlog: React.FC = () => {
         };
     };
 
+    // Fetch title suggestions on demand
+    const fetchTitleSuggestions = async () => {
+        if (title.trim().length === 0) return;
+        setIsTitleSuggesting(true);
+        setShowTitleSuggestions(true);
+        try {
+            const res = await fetch("/api/title-suggestion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ partialTitle: title }),
+            });
+            const data = await res.json();
+            setTitleSuggestions(data.suggestions || []);
+        } catch {
+            setTitleSuggestions([]);
+        } finally {
+            setIsTitleSuggesting(false);
+        }
+    };
+
+    // Fetch tag suggestions on demand
+    const fetchTagSuggestions = async () => {
+        setIsTagSuggesting(true);
+        setShowTagSuggestions(true);
+        try {
+            const res = await fetch("/api/tag-suggestion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ blogContent: content }),
+            });
+            const data = await res.json();
+            setTagSuggestions(data.tags || []);
+        } catch {
+            setTagSuggestions([]);
+        } finally {
+            setIsTagSuggesting(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUpdating(true);
@@ -80,7 +184,7 @@ const EditBlog: React.FC = () => {
             const res = await fetch(`/api/blog/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, content, imageUrl }),
+                body: JSON.stringify({ title, content, imageUrl, tags }),
             });
 
             if (res.ok) {
@@ -92,6 +196,47 @@ const EditBlog: React.FC = () => {
             setIsUpdating(false);
         }
     };
+
+    // Add a function to publish a draft blog
+    const handlePublish = async () => {
+        setIsUpdating(true);
+        try {
+            const res = await fetch(`/api/blog/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content, imageUrl, tags, status: 'PUBLISHED' }),
+            });
+            if (res.ok) {
+                router.push(`/my-blogs`);
+            }
+        } catch (error) {
+            console.error("Error publishing post", error);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    // Add a function to update as draft
+    const handleUpdateDraft = async () => {
+        setIsUpdating(true);
+        try {
+            const res = await fetch(`/api/blog/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content, imageUrl, tags, status: 'DRAFT' }),
+            });
+            if (res.ok) {
+                router.push(`/my-blogs`);
+            }
+        } catch (error) {
+            console.error("Error updating draft", error);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    // In handleSubmit, disable Update Blog if content is empty
+    const isUpdateDisabled = !content.trim() || isUpdating;
 
     if (!blog) return <div>Loading...</div>;
 
@@ -120,12 +265,33 @@ const EditBlog: React.FC = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full"
-                                />
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        id="title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="w-full"
+                                    />
+                                    <SuggestionButton label="Suggest" onClick={fetchTitleSuggestions} loading={isTitleSuggesting} disabled={title.trim().length === 0} />
+                                </div>
+                                {showTitleSuggestions && titleSuggestions.length > 0 && (
+                                    <div className="bg-gray-50 border border-gray-200 rounded p-2 mt-2">
+                                        <div className="text-xs text-gray-500 mb-1">AI Title Suggestions:</div>
+                                        <ul>
+                                            {titleSuggestions.map((suggestion, idx) => (
+                                                <li key={idx}>
+                                                    <button
+                                                        type="button"
+                                                        className="text-left w-full hover:bg-gray-100 px-2 py-1 rounded"
+                                                        onClick={() => handleAddTitleFromSuggestion(suggestion)}
+                                                    >
+                                                        {suggestion}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -155,11 +321,89 @@ const EditBlog: React.FC = () => {
                                 {loading && <p>Uploading image...</p>}
                             </div>
 
-                            <div className="flex justify-end space-x-4">
-                                <Button type="submit" disabled={isUpdating}>
-                                    {isUpdating ? "Updating..." : "Update Blog"}
-                                </Button>
+                            <div className="space-y-2">
+                                <Label htmlFor="tags">Tags</Label>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {tags.map((tag) => (
+                                        <span key={tag} className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs flex items-center">
+                                            {tag}
+                                            <button type="button" className="ml-1 text-blue-500 hover:text-red-500" onClick={() => handleRemoveTag(tag)}>&times;</button>
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        id="tags"
+                                        value={tagInput}
+                                        onChange={(e) => setTagInput(e.target.value)}
+                                        onKeyDown={handleAddTag}
+                                        placeholder="Add a tag and press Enter"
+                                        className="w-full"
+                                    />
+                                    <SuggestionButton label="Suggest" onClick={fetchTagSuggestions} loading={isTagSuggesting} />
+                                </div>
+                                {showTagSuggestions && tagSuggestions.length > 0 && (
+                                    <div className="bg-gray-50 border border-gray-200 rounded p-2 mt-2">
+                                        <div className="text-xs text-gray-500 mb-1">AI Tag Suggestions:</div>
+                                        <ul>
+                                            {tagSuggestions.map((suggestion, idx) => (
+                                                <li key={idx}>
+                                                    <button
+                                                        type="button"
+                                                        className="text-left w-full hover:bg-gray-100 px-2 py-1 rounded"
+                                                        onClick={() => handleAddTagFromSuggestion(suggestion)}
+                                                    >
+                                                        {suggestion}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
+
+                            <div className="flex justify-end space-x-4">
+                                {/* Show Update as Draft and Publish buttons if blog is a draft */}
+                                {blog?.blog?.status === 'DRAFT' ? (
+                                    <>
+                                        <Button type="button" variant="outline" onClick={() => setShowDraftConfirm(true)} disabled={isUpdateDisabled}>
+                                            {isUpdating ? "Updating..." : "Update as Draft"}
+                                        </Button>
+                                        <Button type="button" variant="default" onClick={() => setShowPublishConfirm(true)} disabled={isUpdateDisabled}>
+                                            {isUpdating ? "Publishing..." : "Publish"}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button type="submit" disabled={isUpdateDisabled}>
+                                        {isUpdating ? "Updating..." : "Update Blog"}
+                                    </Button>
+                                )}
+                            </div>
+                            {/* Confirmation popups */}
+                            {showPublishConfirm && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                                    <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+                                        <h2 className="text-lg font-semibold mb-4">Confirm Publish</h2>
+                                        <p className="mb-6">Are you sure you want to publish this blog?</p>
+                                        <div className="flex justify-end gap-4">
+                                            <Button variant="outline" onClick={() => setShowPublishConfirm(false)}>Cancel</Button>
+                                            <Button variant="default" onClick={handlePublish}>Yes, Publish</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {showDraftConfirm && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                                    <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+                                        <h2 className="text-lg font-semibold mb-4">Confirm Update as Draft</h2>
+                                        <p className="mb-6">Are you sure you want to update this blog as a draft?</p>
+                                        <div className="flex justify-end gap-4">
+                                            <Button variant="outline" onClick={() => setShowDraftConfirm(false)}>Cancel</Button>
+                                            <Button variant="default" onClick={handleUpdateDraft}>Yes, Update as Draft</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </form>
                     ) : (
                         <div className="space-y-6">

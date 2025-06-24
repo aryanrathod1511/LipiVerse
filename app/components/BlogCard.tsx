@@ -12,7 +12,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
-    const { id, title, content, imageUrl } = blog;
+    const { id, title, content, imageUrl, tags = [], createdAt, authorName } = blog;
     const [voteCount, setVoteCount] = useState(blog.upvotes || 0);
     const [hasUpvoted, setHasUpvoted] = useState(false);
     const [hasBookmarked, setHasBookmarked] = useState(false);
@@ -121,7 +121,35 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
     return (
         <Card className="card">
             <CardHeader>
-                <CardTitle className="text-xl font-bold">{title}</CardTitle>
+                <div className="flex justify-between items-start w-full">
+                    <CardTitle className="text-xl font-bold">{title}</CardTitle>
+                    <div className="flex flex-col items-end ml-2">
+                        {authorName && (
+                            <span className="text-xs text-gray-500 font-medium capitalize">
+                                by {authorName.split(' ')[0]}
+                            </span>
+                        )}
+                        {createdAt && (
+                            <span className="text-xs text-gray-400 mt-1 whitespace-nowrap">
+                                {new Date(createdAt).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/:\d\d$/, '')}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                {/* Tag badges */}
+                {tags && tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {tags.map((tag: string) => (
+                            <span
+                                key={tag}
+                                className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-200"
+                                onClick={() => router.push(`/all-blogs?q=${encodeURIComponent(tag)}`)}
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
                 {imageUrl && (
                     <Image
                         src={imageUrl}
@@ -160,7 +188,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="card-footer flex flex-wrap gap-2 lg:gap-4 justify-center sm:justify-start">
+            <CardFooter className="card-footer flex flex-wrap gap-2 lg:gap-4 justify-center sm:justify-start relative">
                 <Button 
                     variant="outline" 
                     size="sm" 

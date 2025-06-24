@@ -37,6 +37,7 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   status    PostStatus @default(DRAFT)
+  tags      Tag[]   @relation("PostTags")
 }
 
 model Upvote {
@@ -78,4 +79,10 @@ model Session {
   userId      Int
   expires     DateTime
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[] @relation("PostTags")
 }

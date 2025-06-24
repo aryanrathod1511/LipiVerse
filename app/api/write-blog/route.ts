@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth'; 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type PostStatus, $Enums } from '@prisma/client';
 import { uploadOnCloudinary } from '@/lib/cloudinary';
 
 const prisma = new PrismaClient();
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
     }
 
-    const { title, content, image, status } = await req.json();
+    const { title, content, image, status, tags } = await req.json();
 
     if (!title || !content) {
         return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
@@ -42,6 +42,17 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+        // Prepare tag connections
+        let tagConnect: { id: number }[] = [];
+        if (Array.isArray(tags) && tags.length > 0) {
+            tagConnect = await Promise.all(tags.map(async (tag: string) => {
+                // Find or create the tag
+                const existing = await prisma.tag.findUnique({ where: { name: tag } });
+                if (existing) return { id: existing.id };
+                const created = await prisma.tag.create({ data: { name: tag } });
+                return { id: created.id };
+            }));
+        }
         // Create the new post
         const newPost = await prisma.post.create({
             data: {
@@ -50,6 +61,7 @@ export async function POST(req: NextRequest) {
                 authorId: userId,
                 imageUrl, // Include the imageUrl, will be null if not provided
                 status: status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED',
+                tags: { connect: tagConnect },
             },
         });
 

@@ -7,21 +7,31 @@ const prisma = new PrismaClient();
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const sortBy = searchParams.get("sortBy") || "createdAt";
+    const q = searchParams.get("q")?.toLowerCase() || "";
 
     try {
         const posts = await prisma.post.findMany({
+            where: q
+                ? {
+                    OR: [
+                        { title: { contains: q, mode: 'insensitive' } },
+                        { tags: { some: { name: { contains: q, mode: 'insensitive' } } } },
+                    ],
+                  } as any // type assertion for linter
+                : undefined,
             orderBy: sortBy === "upvotes"
                 ? { upvotes: { _count: "desc" } }  // Sort by the number of upvotes
                 : { createdAt: "desc" },  // Default sort by creation date
             include: {
                 author: true,  // Include author information
+                tags: true,    // Include tags
                 _count: {
                     select: {
                         upvotes: true,  // Include the upvote count in the result
                     },
                 },
-            },
-        });
+            } as any,
+        }) as any[];
 
         // Map the results to include the upvote count in the Blog type
         const blogs = posts.map(post => ({
@@ -29,7 +39,10 @@ export async function GET(req: NextRequest) {
             title: post.title,
             content: post.content,
             imageUrl: post.imageUrl,
-            upvotes: post._count.upvotes,  // Set the upvotes from the _count field
+            upvotes: post._count?.upvotes ?? 0,  // Set the upvotes from the _count field
+            tags: Array.isArray(post.tags) ? post.tags.map((tag: any) => tag.name) : [],
+            authorName: post.author?.name ? post.author.name.toLowerCase() : 'unknown',
+            createdAt: post.createdAt,
         }));
 
         return NextResponse.json(blogs);

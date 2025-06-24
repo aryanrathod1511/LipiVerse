@@ -6,6 +6,10 @@ export interface Blog {
   content: string;
   imageUrl?: string | null;
   upvotes?: number;
+  tags?: string[];
+  status?: 'DRAFT' | 'PUBLISHED';
+  authorName?: string;
+  createdAt?: string;
 }
 
 // Define the structure of a Bookmark
