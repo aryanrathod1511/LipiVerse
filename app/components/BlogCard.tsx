@@ -40,8 +40,8 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
                         setHasBookmarked(bookmarkData.hasBookmarked);
                     }
                 }
-            } catch (error) {
-                console.error("Failed to fetch vote count or bookmark status", error);
+            }catch {
+                console.error("Failed to fetch vote count or bookmark status");
             }
         };
 
