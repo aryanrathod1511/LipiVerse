@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BounceLoader } from "react-spinners";
 import SuggestionButton from "../components/ui/SuggestionButton";
+import Image from "next/image";
 
 export default function WriteBlogPage() {
     const [title, setTitle] = useState('');
@@ -334,7 +335,7 @@ export default function WriteBlogPage() {
                             {imageUrl && (
                                 <div className="mt-4">
                                     <h2>Generated Image Preview</h2>
-                                    <img src={imageUrl} alt="Generated Preview" className="w-full h-auto mt-2" />
+                                    <Image src={imageUrl} alt="Generated Preview" width={600} height={400} className="w-full h-auto mt-2" />
                                 </div>
                             )}
 

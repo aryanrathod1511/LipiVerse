@@ -22,7 +22,6 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
     const [summary, setSummary] = useState<string | null>(null);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summaryError, setSummaryError] = useState<string | null>(null);
-    const [isBookmarking, setIsBookmarking] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,8 +86,8 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
             }
 
             setHasBookmarked(!hasBookmarked);
-        } catch (err) {
-            console.error("Failed to update bookmark", err);
+        } catch {
+            console.error("Failed to update bookmark");
         }
     };
 

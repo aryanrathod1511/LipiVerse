@@ -7,7 +7,6 @@ import { Appbar } from "../components/Appbar";
 import MyBlogCard from "../components/MyBlogsCard";
 import MyBlogCardSkeleton from "../components/MyBlogCardSkeleton";
 import { Button } from "../components/ui/button";
-import { useRouter } from "next/navigation";
 import { BounceLoader } from "react-spinners";
 
 type PostWithStatus = PrismaPost & { status: 'PUBLISHED' | 'DRAFT' };
@@ -17,7 +16,6 @@ const MyBlogsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'PUBLISHED' | 'DRAFT'>('PUBLISHED');
-  const router = useRouter();
 
   const fetchBlogs = async () => {
     setLoading(true);
