@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 import BlogCard from "@/app/components/BlogCard";
 import { Blog } from "@/types/BlogTypes";
 import { Appbar } from "@/app/components/Appbar";
-import { useRouter } from "next/navigation";
 import BackButton from "@/app/components/BackButton";
 
 const prisma = new PrismaClient();

@@ -11,7 +11,6 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Appbar } from "@/app/components/Appbar";
-import { Blog } from "@/types/BlogTypes";
 import SuggestionButton from "@/app/components/ui/SuggestionButton";
 import { BounceLoader } from "react-spinners";
 
@@ -34,7 +33,6 @@ const EditBlog: React.FC = () => {
     const [isTitleSuggesting, setIsTitleSuggesting] = useState(false);
     const [isTagSuggesting, setIsTagSuggesting] = useState(false);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
-    const [showDraftConfirm, setShowDraftConfirm] = useState(false);
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -48,7 +46,7 @@ const EditBlog: React.FC = () => {
                     setContent(data.content || "");
                     setImageUrl(data.imageUrl || "");
                     if (Array.isArray(data.tags) && data.tags.length > 0 && typeof data.tags[0] === 'object') {
-                        setTags(data.tags.map((t: any) => t.name));
+                        setTags(data.tags.map((t: { name: string }) => t.name));
                     } else {
                         setTags(data.tags || []);
                     }
@@ -233,25 +231,6 @@ const EditBlog: React.FC = () => {
         }
     };
 
-    // Add a function to update as draft
-    const handleUpdateDraft = async () => {
-        setIsUpdating(true);
-        try {
-            const res = await fetch(`/api/blog/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, content, imageUrl, tags, status: 'DRAFT' }),
-            });
-            if (res.ok) {
-                router.push(`/my-blogs`);
-            }
-        } catch (error) {
-            console.error("Error updating draft", error);
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
     // In handleSubmit, disable Update Blog if content is empty
     const isUpdateDisabled = !content.trim() || isUpdating;
 
@@ -381,12 +360,9 @@ const EditBlog: React.FC = () => {
 
                             <div className="flex justify-end space-x-4">
                                 {/* Show Update as Draft and Publish buttons if blog is a draft */}
-                                {blog && blog.status === 'DRAFT' ? (
+                                {blog && (("status" in blog && blog.status === 'DRAFT') || ("blog" in blog && blog.blog.status === 'DRAFT')) ? (
                                     <>
-                                        <Button type="button" variant="outline" onClick={() => setShowDraftConfirm(true)} disabled={isUpdateDisabled}>
-                                            {isUpdating ? "Updating..." : "Update as Draft"}
-                                        </Button>
-                                        <Button type="button" variant="default" onClick={() => setShowPublishConfirm(true)} disabled={isUpdateDisabled}>
+                                        <Button type="button" variant="outline" onClick={() => setShowPublishConfirm(true)} disabled={isUpdateDisabled}>
                                             {isUpdating ? "Publishing..." : "Publish"}
                                         </Button>
                                     </>
