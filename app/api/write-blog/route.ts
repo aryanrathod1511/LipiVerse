@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth'; 
-import { PrismaClient, type PostStatus, $Enums } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { uploadOnCloudinary } from '@/lib/cloudinary';
 
 const prisma = new PrismaClient();

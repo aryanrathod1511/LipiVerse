@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       .filter((s: string) => s.length > 0)
       .slice(0, 3);
     return NextResponse.json({ suggestions });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ suggestions: [] }, { status: 200 });
   }
 }
