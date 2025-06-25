@@ -1,6 +1,7 @@
 // This file gets all blogs for the un-authenticated users by upvotes.
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { Blog } from "@/types/BlogTypes";
 
 const prisma = new PrismaClient();
 
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
                         { title: { contains: q, mode: 'insensitive' } },
                         { tags: { some: { name: { contains: q, mode: 'insensitive' } } } },
                     ],
-                  } as any // type assertion for linter
+                  }
                 : undefined,
             orderBy: sortBy === "upvotes"
                 ? { upvotes: { _count: "desc" } }  // Sort by the number of upvotes
@@ -30,19 +31,19 @@ export async function GET(req: NextRequest) {
                         upvotes: true,  // Include the upvote count in the result
                     },
                 },
-            } as any,
-        }) as any[];
+            },
+        });
 
         // Map the results to include the upvote count in the Blog type
-        const blogs = posts.map(post => ({
+        const blogs: Blog[] = posts.map(post => ({
             id: post.id,
             title: post.title,
             content: post.content,
             imageUrl: post.imageUrl,
             upvotes: post._count?.upvotes ?? 0,  // Set the upvotes from the _count field
-            tags: Array.isArray(post.tags) ? post.tags.map((tag: any) => tag.name) : [],
+            tags: Array.isArray(post.tags) ? post.tags.map((tag: { name: string }) => tag.name) : [],
             authorName: post.author?.name ? post.author.name.toLowerCase() : 'unknown',
-            createdAt: post.createdAt,
+            createdAt: post.createdAt instanceof Date ? post.createdAt.toISOString() : post.createdAt,
         }));
 
         return NextResponse.json(blogs);

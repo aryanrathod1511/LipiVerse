@@ -42,16 +42,16 @@ export default function AllBlogs() {
                     className="w-full px-4 py-2 border rounded mb-6"
                 />
             </div>
-            {/* Masonry Layout */}
-            <div className="masonry p-4">
+            {/* Grid Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
                 {isLoading || !blogs
                     ? Array.from({ length: 6 }, (_, i) => (
-                        <div key={i} className="masonry-item">
+                        <div key={i}>
                             <BlogCardSkeleton />
                         </div>
                     ))
                     : blogs.map((blog) => (
-                        <div key={blog.id} className="masonry-item">
+                        <div key={blog.id}>
                             <BlogCard mode="short" blog={blog} onUpvote={handleUpvote} />
                         </div>
                     ))}

@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 import { Appbar } from "@/app/components/Appbar";
 import { Blog } from "@/types/BlogTypes";
 import SuggestionButton from "@/app/components/ui/SuggestionButton";
+import { BounceLoader } from "react-spinners";
 
 const EditBlog: React.FC = () => {
     const { id } = useParams();
@@ -46,7 +47,11 @@ const EditBlog: React.FC = () => {
                     setTitle(data.title || "");
                     setContent(data.content || "");
                     setImageUrl(data.imageUrl || "");
-                    setTags(data.tags || []);
+                    if (Array.isArray(data.tags) && data.tags.length > 0 && typeof data.tags[0] === 'object') {
+                        setTags(data.tags.map((t: any) => t.name));
+                    } else {
+                        setTags(data.tags || []);
+                    }
                 } else {
                     console.error("Blog not found:", await res.text());
                 }
@@ -148,6 +153,12 @@ const EditBlog: React.FC = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ partialTitle: title }),
             });
+            if (!res.ok) {
+                alert("The developer has reached the limit for the AI API. Please try again later.");
+                setTitleSuggestions([]);
+                setShowTitleSuggestions(false);
+                return;
+            }
             const data = await res.json();
             setTitleSuggestions(data.suggestions || []);
         } catch {
@@ -167,6 +178,12 @@ const EditBlog: React.FC = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ blogContent: content }),
             });
+            if (!res.ok) {
+                alert("The developer has reached the limit for the AI API. Please try again later.");
+                setTagSuggestions([]);
+                setShowTagSuggestions(false);
+                return;
+            }
             const data = await res.json();
             setTagSuggestions(data.tags || []);
         } catch {
@@ -238,7 +255,7 @@ const EditBlog: React.FC = () => {
     // In handleSubmit, disable Update Blog if content is empty
     const isUpdateDisabled = !content.trim() || isUpdating;
 
-    if (!blog) return <div>Loading...</div>;
+    if (!blog) return <div className="flex justify-center items-center min-h-screen"><BounceLoader size={60} color="#000000" /></div>;
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -364,7 +381,7 @@ const EditBlog: React.FC = () => {
 
                             <div className="flex justify-end space-x-4">
                                 {/* Show Update as Draft and Publish buttons if blog is a draft */}
-                                {blog?.blog?.status === 'DRAFT' ? (
+                                {blog && blog.status === 'DRAFT' ? (
                                     <>
                                         <Button type="button" variant="outline" onClick={() => setShowDraftConfirm(true)} disabled={isUpdateDisabled}>
                                             {isUpdating ? "Updating..." : "Update as Draft"}
@@ -392,18 +409,7 @@ const EditBlog: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-                            {showDraftConfirm && (
-                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                                    <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
-                                        <h2 className="text-lg font-semibold mb-4">Confirm Update as Draft</h2>
-                                        <p className="mb-6">Are you sure you want to update this blog as a draft?</p>
-                                        <div className="flex justify-end gap-4">
-                                            <Button variant="outline" onClick={() => setShowDraftConfirm(false)}>Cancel</Button>
-                                            <Button variant="default" onClick={handleUpdateDraft}>Yes, Update as Draft</Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                            
                         </form>
                     ) : (
                         <div className="space-y-6">

@@ -11,6 +11,7 @@ import { signIn, useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+
 const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
     const { id, title, content, imageUrl, tags = [], createdAt, authorName } = blog;
     const [voteCount, setVoteCount] = useState(blog.upvotes || 0);
@@ -21,6 +22,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
     const [summary, setSummary] = useState<string | null>(null);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summaryError, setSummaryError] = useState<string | null>(null);
+    const [isBookmarking, setIsBookmarking] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -136,20 +138,6 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
                         )}
                     </div>
                 </div>
-                {/* Tag badges */}
-                {tags && tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {tags.map((tag: string) => (
-                            <span
-                                key={tag}
-                                className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-200"
-                                onClick={() => router.push(`/all-blogs?q=${encodeURIComponent(tag)}`)}
-                            >
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                )}
                 {imageUrl && (
                     <Image
                         src={imageUrl}
@@ -163,6 +151,20 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
                 )}
             </CardHeader>
             <CardContent>
+                {/* Tag badges (always visible) */}
+                {tags && tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {tags.map((tag: string) => (
+                            <span
+                                key={tag}
+                                className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-200"
+                                onClick={() => router.push(`/all-blogs?q=${encodeURIComponent(tag)}`)}
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
                 <ReactMarkdown
                     className="prose prose-sm sm:prose lg:prose-lg"
                     remarkPlugins={[remarkGfm]}

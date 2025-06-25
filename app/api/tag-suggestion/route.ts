@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     });
     const data = await response.json();
     if (!response.ok || !data.choices || !data.choices[0]?.message?.content) {
-      return NextResponse.json({ tags: [] }, { status: 200 });
+      return NextResponse.json({msg: "The developer has reached out of limit of the OpenAI API. Please try again later."});
     }
     const tags = data.choices[0].message.content
       .split(',')
@@ -38,6 +38,6 @@ export async function POST(req: NextRequest) {
       .slice(0, 5);
     return NextResponse.json({ tags });
   } catch (error) {
-    return NextResponse.json({ tags: [] }, { status: 200 });
+    return NextResponse.json(error);
   }
 }

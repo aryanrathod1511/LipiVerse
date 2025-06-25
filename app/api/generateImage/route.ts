@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         // Lexica returns an array of images, pick the first one
         const imageUrl = data.images?.[0]?.srcSmall || '';
         return NextResponse.json({ imageUrl });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ imageUrl: '' }, { status: 200 });
     }
 }

@@ -24,6 +24,20 @@ const MyBlogCard: React.FC<BlogCardProps> = ({ blog }) => {
     return (
         <div className="myblog-card flex flex-col space-y-2 border-2 px-3 py-3 h-auto">
             <h3 className="text-xl font-bold">{blog.title}</h3>
+            {/* Tag badges */}
+            {blog.tags && blog.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                    {blog.tags.map((tag: string) => (
+                        <span
+                            key={tag}
+                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-200"
+                            onClick={() => router.push(`/all-blogs?q=${encodeURIComponent(tag)}`)}
+                        >
+                            #{tag}
+                        </span>
+                    ))}
+                </div>
+            )}
             {image && (
                 <Image
                     width={600}

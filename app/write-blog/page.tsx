@@ -50,8 +50,7 @@ export default function WriteBlogPage() {
                 const { imageUrl } = await response.json();
                 setImageUrl(imageUrl);
             } else {
-                const errorData = await response.json();
-                alert(errorData.error);
+                alert("The developer has reached the limit for the AI API. Please try again later.");
             }
         } catch (error) {
             console.error("Error generating image:", error);
@@ -119,6 +118,12 @@ export default function WriteBlogPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ partialTitle: title }),
             });
+            if (!res.ok) {
+                alert("The developer has reached the limit for the AI API. Please try again later.");
+                setTitleSuggestions([]);
+                setShowSuggestions(false);
+                return;
+            }
             const data = await res.json();
             setTitleSuggestions(data.suggestions || []);
             setShowSuggestions((data.suggestions || []).length > 0);
@@ -140,6 +145,12 @@ export default function WriteBlogPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ blogContent: content }),
             });
+            if (!res.ok) {
+                alert("The developer has reached the limit for the AI API. Please try again later.");
+                setTagSuggestions([]);
+                setShowTagSuggestions(false);
+                return;
+            }
             const data = await res.json();
             setTagSuggestions(data.tags || []);
         } catch {
