@@ -106,7 +106,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, mode }) => {
             } else {
                 setSummaryError(data.error || 'Failed to summarize.');
             }
-        } catch (err) {
+        } catch {
             setSummaryError('Failed to summarize.');
         } finally {
             setIsSummarizing(false);
